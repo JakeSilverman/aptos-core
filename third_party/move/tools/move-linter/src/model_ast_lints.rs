@@ -12,6 +12,7 @@ mod simpler_numeric_expression;
 mod unnecessary_boolean_identity_comparison;
 mod unnecessary_numerical_extreme_comparison;
 mod while_true;
+mod bool_const_prop;
 
 use move_compiler_v2::external_checks::ExpChecker;
 
@@ -27,5 +28,6 @@ pub fn get_default_linter_pipeline() -> Vec<Box<dyn ExpChecker>> {
         Box::<unnecessary_boolean_identity_comparison::UnnecessaryBooleanIdentityComparison>::default(),
         Box::<unnecessary_numerical_extreme_comparison::UnnecessaryNumericalExtremeComparison>::default(),
         Box::<while_true::WhileTrue>::default(),
+        Box::<bool_const_prop::BoolConstProp>::default(),
     ]
 }
