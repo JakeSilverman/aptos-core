@@ -13,23 +13,20 @@
 //! 8. `x == false`, which can be replaced with just `!x`.
 //! 9. `x != true`, which can be replaced with just `!x`.
 //! 10. `x != false`, which can be replaced with just `x`.
-//! 11. `x ^ true`, which can be replaced with just `!x`.
-//! 12. `x ^ false`, which can be replaced with just `x`.
-//! 13. `x ==> true`, which can be replaced with just `true`.
-//! 14. `x ==> false`, which can be replaced with just `!x`.
-//! 15. `true ==> x`, which can be replaced with just `x`.
-//! 16. `false ==> x`, which can be replaced with just `true`.
-//! 17. `!true`, which can be replaced with just `false`.
-//! 18. `!false`, which can be replaced with just `true`.
+//! 11. `x ==> true`, which can be replaced with just `true`.
+//! 12. `x ==> false`, which can be replaced with just `!x`.
+//! 13. `true ==> x`, which can be replaced with just `x`.
+//! 14. `false ==> x`, which can be replaced with just `true`.
+//! 15. `!true`, which can be replaced with just `false`.
+//! 16. `!false`, which can be replaced with just `true`.
 //!
-//! Note also that rules 1 through 12 have both LHS and RHS version
+//! Note also that rules 1 through 10 have both LHS and RHS version
 
 use move_compiler_v2::external_checks::ExpChecker;
 use move_model::{
     ast::{ExpData, Operation, Value},
     model::GlobalEnv,
 };
-use move_model::ast::Operation::{And, Eq, Iff, Implies, Neq, Or};
 
 #[derive(Default)]
 pub struct BoolIdentProp;
@@ -62,19 +59,18 @@ impl ExpChecker for BoolIdentProp {
                 (Implies, false, 0) => {
                     Some("This expression can be simplified as `true`.".to_string())
                 },
-                (Eq, _, _) | (Neq, _, _) | (Iff, _, _) | (Xor, _, _) | (Implies, true, 0) | (Implies, false, 1) => {
+                (Eq, _, _) | (Neq, _, _) | (Iff, _, _) | (Implies, true, 0) | (Implies, false, 1) => {
                     let relation = match (cmp, side) {
                         (Eq, _) => "is equal to",
                         (Neq, _) => "is not equal to",
                         (Iff, _) => "is equivalent to",
-                        (Xor, _) => "is xored with",
                         (Implies, 0) => "is implied by",
                         (Implies, 1) => "implies",
                         _ => unreachable!(),
                     };
                     Some(format!(
-                        "Directly use the {}boolean expression, instead of checking if it {} `{}`.",
-                        if b && !matches!(*cmp, Neq | Xor) { "" } else { "negation of " },
+                        "Directly use the {}boolean expression instead of checking if it {} `{}`.",
+                        if b && !matches!(*cmp, Neq) { "" } else { "negation of " },
                         relation,
                         b
                     ))
@@ -82,9 +78,11 @@ impl ExpChecker for BoolIdentProp {
                 _ => panic!("Unexpected operation encountered: {:?}", cmp),
             }
         };
-        let Call(_, cmp, args) = expr;
+        let Call(_, cmp, args) = expr else {
+            return;
+        };
         let msg = match cmp {
-            And | Or | Eq | Neq | Implies | Iff | Xor =>{
+            And | Or | Eq | Neq | Implies | Iff =>{
                 match (args[0].as_ref(), args[1].as_ref()) {
                     // When one of the arguments is a boolean literal (true or false)
                     (ExpValue(_, Bool(b)), _) => {
