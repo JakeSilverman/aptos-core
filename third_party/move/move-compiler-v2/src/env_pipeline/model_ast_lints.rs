@@ -33,10 +33,6 @@ pub fn checker(env: &mut GlobalEnv) {
                 }
                 check_function(&function, &module_lint_skips, &known_checker_names);
             }
-            for spec in module.get_spec_funs() {
-
-                continue;
-            }
         }
     }
 }
